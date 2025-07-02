@@ -1,10 +1,12 @@
 const express = require('express');
 const Rating = require('../models/Rating');
+const auth = require('../middleware/auth');
 const router = express.Router();
 
 // POST a rating or update existing rating for the same user
-router.post('/', async (req, res) => {
-    const { bookId, score, userId } = req.body;
+router.post('/', auth, async (req, res) => {
+    const { bookId, score } = req.body;
+    const userId = req.userId;
     try {
         let rating = await Rating.findOne({ bookId, userId });
         if (rating) {
@@ -38,7 +40,7 @@ router.get('/:bookId', async (req, res) => {
 });
 
 // Update a rating by id
-router.put('/:id', async (req, res) => {
+router.put('/:id', auth, async (req, res) => {
     try {
         const rating = await Rating.findByIdAndUpdate(
             req.params.id,
@@ -53,7 +55,7 @@ router.put('/:id', async (req, res) => {
 });
 
 // Delete a rating by id
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', auth, async (req, res) => {
     try {
         await Rating.findByIdAndDelete(req.params.id);
         res.json({ message: 'Rating deleted' });

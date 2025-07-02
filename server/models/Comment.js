@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 
 const commentSchema = new mongoose.Schema({
     bookId: String,
+    userId: String,
     text: String,
     createdAt: {
         type: Date,

@@ -4,6 +4,7 @@ const dotenv = require('dotenv');
 const mongoose = require('mongoose');
 const ratingsRouter = require('./routes/ratings');
 const commentsRouter = require('./routes/comments');
+const authRouter = require('./routes/auth');
 
 dotenv.config();
 
@@ -13,6 +14,7 @@ app.use(cors({
 }));
 app.use(express.json());
 
+app.use('/api/auth', authRouter);
 app.use('/api/ratings', ratingsRouter);
 app.use('/api/comments', commentsRouter);
 

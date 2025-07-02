@@ -4,7 +4,7 @@ import React from 'react';
 
 const PLACEHOLDER_IMG = 'https://via.placeholder.com/128x193?text=No+Image';
 
-const BookCard = React.memo(function BookCard({ book, userId }) {
+const BookCard = React.memo(function BookCard({ book, userId, token }) {
   const bookId = book.primary_isbn13;
 
   const [comments, setComments] = useState([]);
@@ -17,19 +17,20 @@ const BookCard = React.memo(function BookCard({ book, userId }) {
     const data = localStorage.getItem('userRatings');
     if (!data) return null;
     const map = JSON.parse(data);
-    return map[bookId] || null;
-  });
+    return map[`${userId}_${bookId}`] || null;
+});
 
   useEffect(() => {
     const data = localStorage.getItem('userRatings');
     const map = data ? JSON.parse(data) : {};
+    const key = `${userId}_${bookId}`;
     if (userRatingId) {
-      map[bookId] = userRatingId;
+      map[key] = userRatingId;
     } else {
-      delete map[bookId];
+      delete map[key];
     }
     localStorage.setItem('userRatings', JSON.stringify(map));
-  }, [userRatingId, bookId]);
+}, [userRatingId, bookId, userId]);
 
   const fetchBookData = useCallback(async () => {
     try {
@@ -42,7 +43,7 @@ const BookCard = React.memo(function BookCard({ book, userId }) {
     } catch (err) {
       console.error(`Error fetching data for ${bookId}:`, err);
     }
-  }, [bookId]);
+}, [bookId]);
 
   useEffect(() => {
     fetchBookData();
@@ -51,24 +52,27 @@ const BookCard = React.memo(function BookCard({ book, userId }) {
   const handleCommentSubmit = useCallback(async () => {
     if (!newComment) return;
     try {
-      await axios.post('http://localhost:5000/api/comments', {
-        bookId,
-        text: newComment,
-      });
+      await axios.post(
+        'http://localhost:5000/api/comments',
+        { bookId, text: newComment },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
       setNewComment('');
       const res = await axios.get(`http://localhost:5000/api/comments/${bookId}`);
       setComments(res.data);
     } catch (err) {
       console.error('Failed to post comment:', err);
     }
-  }, [newComment, bookId]);
+}, [newComment, bookId, token]);
 
   const handleEditComment = useCallback(async () => {
     if (!editingCommentId) return;
     try {
-      await axios.put(`http://localhost:5000/api/comments/${editingCommentId}`, {
-        text: editingCommentText,
-      });
+      await axios.put(
+        `http://localhost:5000/api/comments/${editingCommentId}`,
+        { text: editingCommentText },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
       setEditingCommentId(null);
       setEditingCommentText('');
       const res = await axios.get(`http://localhost:5000/api/comments/${bookId}`);
@@ -76,45 +80,49 @@ const BookCard = React.memo(function BookCard({ book, userId }) {
     } catch (err) {
       console.error('Failed to update comment:', err);
     }
-  }, [editingCommentId, editingCommentText, bookId]);
+}, [editingCommentId, editingCommentText, bookId, token]);
 
   const handleDeleteComment = useCallback(async (id) => {
     try {
-      await axios.delete(`http://localhost:5000/api/comments/${id}`);
+      await axios.delete(`http://localhost:5000/api/comments/${id}`,
+        { headers: { Authorization: `Bearer ${token}` } });
       const res = await axios.get(`http://localhost:5000/api/comments/${bookId}`);
       setComments(res.data);
     } catch (err) {
       console.error('Failed to delete comment:', err);
     }
-  }, [bookId]);
+}, [bookId, token]);
 
   const handleRatingSubmit = useCallback(async () => {
     const ratingValue = parseInt(newRating);
     if (!ratingValue || ratingValue < 1 || ratingValue > 5) return;
     try {
-      const res = await axios.post('http://localhost:5000/api/ratings', {
-        bookId,
-        score: ratingValue,
-        userId,
-      });
+      const res = await axios.post(
+        'http://localhost:5000/api/ratings',
+        { bookId, score: ratingValue },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
       setUserRatingId(res.data._id);
       setNewRating('');
       await fetchBookData();
     } catch (err) {
       console.error('Failed to post rating:', err);
     }
-  }, [newRating, userId, bookId, fetchBookData]);
+}, [newRating, bookId, fetchBookData, token]);
 
   const handleDeleteRating = useCallback(async () => {
     if (!userRatingId) return;
     try {
-      await axios.delete(`http://localhost:5000/api/ratings/${userRatingId}`);
+      await axios.delete(
+        `http://localhost:5000/api/ratings/${userRatingId}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
       setUserRatingId(null);
       await fetchBookData();
     } catch (err) {
       console.error('Failed to delete rating:', err);
     }
-  }, [userRatingId, fetchBookData]);
+}, [userRatingId, fetchBookData, token]);
 
   const handleImgError = (e) => {
     e.target.src = PLACEHOLDER_IMG;
@@ -150,10 +158,12 @@ const BookCard = React.memo(function BookCard({ book, userId }) {
           value={newRating}
           onChange={(e) => setNewRating(e.target.value)}
           className="border p-1 w-20 mr-2"
+          disabled={!token}
         />
         <button
           onClick={handleRatingSubmit}
           className="text-sm bg-green-500 text-white px-2 py-1 rounded"
+          disabled={!token}
         >
           Submit Rating
         </button>
@@ -161,6 +171,7 @@ const BookCard = React.memo(function BookCard({ book, userId }) {
           <button
             onClick={handleDeleteRating}
             className="ml-2 text-sm bg-red-500 text-white px-2 py-1 rounded"
+            disabled={!token}
           >
             Delete My Rating
           </button>
@@ -182,6 +193,7 @@ const BookCard = React.memo(function BookCard({ book, userId }) {
                   <button
                     onClick={handleEditComment}
                     className="text-sm bg-green-500 text-white px-1 rounded"
+                    disabled={!token}
                   >
                     Save
                   </button>
@@ -198,12 +210,14 @@ const BookCard = React.memo(function BookCard({ book, userId }) {
                   <button
                     onClick={() => { setEditingCommentId(comment._id); setEditingCommentText(comment.text); }}
                     className="text-xs text-blue-600"
+                    disabled={!token}
                   >
                     Edit
                   </button>
                   <button
                     onClick={() => handleDeleteComment(comment._id)}
                     className="text-xs text-red-600"
+                    disabled={!token}
                   >
                     Delete
                   </button>
@@ -218,10 +232,12 @@ const BookCard = React.memo(function BookCard({ book, userId }) {
             value={newComment}
             onChange={(e) => setNewComment(e.target.value)}
             className="border p-1 flex-1"
+            disabled={!token}
           />
           <button
             onClick={handleCommentSubmit}
             className="text-sm bg-blue-500 text-white px-2 py-1 rounded"
+            disabled={!token}
           >
             Submit
           </button>

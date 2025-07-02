@@ -1,12 +1,12 @@
 {
   "name": "server",
   "version": "1.0.0",
-  "description": "",
+  "description": "Backend proxy and API for NYT Books App",
   "main": "index.js",
   "scripts": {
+    "start": "node index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
@@ -15,5 +15,6 @@
     "dotenv": "^17.0.0",
     "express": "^5.1.0",
     "mongoose": "^8.16.1"
-  }
+  },
+  "devDependencies": {}
 }

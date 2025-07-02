@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import axios from 'axios';
 
 function App() {
@@ -8,6 +8,24 @@ function App() {
   const [ratings, setRatings] = useState({});
   const [newComment, setNewComment] = useState({});
   const [newRating, setNewRating] = useState({});
+  const [editingCommentId, setEditingCommentId] = useState(null);
+  const [editingCommentText, setEditingCommentText] = useState('');
+  const [userRatings, setUserRatings] = useState(() => {
+    const data = localStorage.getItem('userRatings');
+    return data ? JSON.parse(data) : {};
+  });
+  const [userId] = useState(() => {
+    let id = localStorage.getItem('userId');
+    if (!id) {
+      id = Math.random().toString(36).substring(2, 9);
+      localStorage.setItem('userId', id);
+    }
+    return id;
+  });
+
+  useEffect(() => {
+    localStorage.setItem('userRatings', JSON.stringify(userRatings));
+  }, [userRatings]);
 
   const fetchBookData = async (bookId) => {
     try {
@@ -52,19 +70,60 @@ function App() {
     }
   };
 
+  const handleEditComment = async (bookId) => {
+    if (!editingCommentId) return;
+    try {
+      await axios.put(`http://localhost:5000/api/comments/${editingCommentId}`, {
+        text: editingCommentText,
+      });
+      setEditingCommentId(null);
+      setEditingCommentText('');
+      const res = await axios.get(`http://localhost:5000/api/comments/${bookId}`);
+      setComments((prev) => ({ ...prev, [bookId]: res.data }));
+    } catch (err) {
+      console.error('Failed to update comment:', err);
+    }
+  };
+
+  const handleDeleteComment = async (id, bookId) => {
+    try {
+      await axios.delete(`http://localhost:5000/api/comments/${id}`);
+      const res = await axios.get(`http://localhost:5000/api/comments/${bookId}`);
+      setComments((prev) => ({ ...prev, [bookId]: res.data }));
+    } catch (err) {
+      console.error('Failed to delete comment:', err);
+    }
+  };
+
   const handleRatingSubmit = async (bookId) => {
     const ratingValue = parseInt(newRating[bookId]);
     if (!ratingValue || ratingValue < 1 || ratingValue > 5) return;
 
     try {
-      await axios.post('http://localhost:5000/api/ratings', {
+      const res = await axios.post('http://localhost:5000/api/ratings', {
         bookId,
         score: ratingValue,
+        userId,
       });
+      setUserRatings((prev) => ({ ...prev, [bookId]: res.data._id }));
       setNewRating({ ...newRating, [bookId]: '' });
       await fetchBookData(bookId);
     } catch (err) {
       console.error('Failed to post rating:', err);
+    }
+  };
+
+  const handleDeleteRating = async (bookId) => {
+    const id = userRatings[bookId];
+    if (!id) return;
+    try {
+      await axios.delete(`http://localhost:5000/api/ratings/${id}`);
+      const copy = { ...userRatings };
+      delete copy[bookId];
+      setUserRatings(copy);
+      await fetchBookData(bookId);
+    } catch (err) {
+      console.error('Failed to delete rating:', err);
     }
   };
 
@@ -124,13 +183,59 @@ function App() {
                   >
                     Submit Rating
                   </button>
+                  {userRatings[bookId] && (
+                    <button
+                      onClick={() => handleDeleteRating(bookId)}
+                      className="ml-2 text-sm bg-red-500 text-white px-2 py-1 rounded"
+                    >
+                      Delete My Rating
+                    </button>
+                  )}
                 </div>
 
                 <div className="mt-4">
                   <h3 className="font-semibold mb-2">Comments:</h3>
-                  <ul className="list-disc ml-5 text-sm text-gray-700">
-                    {(comments[bookId] || []).map((comment, i) => (
-                      <li key={i}>{comment.text}</li>
+                  <ul className="list-disc ml-5 text-sm text-gray-700 space-y-1">
+                    {(comments[bookId] || []).map((comment) => (
+                      <li key={comment._id} className="flex items-start gap-2">
+                        {editingCommentId === comment._id ? (
+                          <>
+                            <input
+                              className="border p-1 flex-1"
+                              value={editingCommentText}
+                              onChange={(e) => setEditingCommentText(e.target.value)}
+                            />
+                            <button
+                              onClick={() => handleEditComment(bookId)}
+                              className="text-sm bg-green-500 text-white px-1 rounded"
+                            >
+                              Save
+                            </button>
+                            <button
+                              onClick={() => { setEditingCommentId(null); setEditingCommentText(''); }}
+                              className="text-sm bg-gray-300 px-1 rounded"
+                            >
+                              Cancel
+                            </button>
+                          </>
+                        ) : (
+                          <>
+                            <span className="flex-1">{comment.text}</span>
+                            <button
+                              onClick={() => { setEditingCommentId(comment._id); setEditingCommentText(comment.text); }}
+                              className="text-xs text-blue-600"
+                            >
+                              Edit
+                            </button>
+                            <button
+                              onClick={() => handleDeleteComment(comment._id, bookId)}
+                              className="text-xs text-red-600"
+                            >
+                              Delete
+                            </button>
+                          </>
+                        )}
+                      </li>
                     ))}
                   </ul>
                   <div className="mt-2 flex gap-2">

@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 
 const ratingSchema = new mongoose.Schema({
     bookId: String,
+    userId: String,
     score: Number,
     createdAt: {
         type: Date,

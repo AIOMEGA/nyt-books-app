@@ -27,6 +27,21 @@ router.get('/:bookId', async (req, res) => {
     }
 });
 
+// Update a comment by ID
+router.put('/:id', async (req, res) => {
+    try {
+        const updated = await Comment.findByIdAndUpdate(
+            req.params.id,
+            { text: req.body.text },
+            { new: true }
+        );
+        res.json(updated);
+    } catch (err) {
+        console.error('Error updating comment:', err);
+        res.status(500).json({ error: 'Failed to update comment' });
+    }
+});
+
 // Delete a comment by ID
 router.delete('/:id', async (req, res) => {
     try {

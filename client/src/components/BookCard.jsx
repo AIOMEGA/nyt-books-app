@@ -13,14 +13,21 @@ const BookCard = React.memo(function BookCard({ book, userId, token }) {
   const [newRating, setNewRating] = useState('');
   const [editingCommentId, setEditingCommentId] = useState(null);
   const [editingCommentText, setEditingCommentText] = useState('');
-  const [userRatingId, setUserRatingId] = useState(() => {
+const [userRatingId, setUserRatingId] = useState(() => {
     const data = localStorage.getItem('userRatings');
     if (!data) return null;
     const map = JSON.parse(data);
     return map[`${userId}_${bookId}`] || null;
 });
 
-  useEffect(() => {
+// Keep the stored rating id in sync when user or book changes
+useEffect(() => {
+    const data = localStorage.getItem('userRatings');
+    const map = data ? JSON.parse(data) : {};
+    setUserRatingId(map[`${userId}_${bookId}`] || null);
+}, [userId, bookId]);
+
+useEffect(() => {
     const data = localStorage.getItem('userRatings');
     const map = data ? JSON.parse(data) : {};
     const key = `${userId}_${bookId}`;
@@ -150,7 +157,7 @@ const BookCard = React.memo(function BookCard({ book, userId, token }) {
 
       <div className="mt-4">
         <h3 className="font-semibold">Average Rating: {ratings?.average?.toFixed(2) || 'N/A'}</h3>
-        {token && (
+        {token && !userRatingId && (
           <>
             <input
               type="number"
@@ -167,15 +174,15 @@ const BookCard = React.memo(function BookCard({ book, userId, token }) {
             >
               Submit Rating
             </button>
-            {userRatingId && (
-              <button
-                onClick={handleDeleteRating}
-                className="ml-2 text-sm bg-red-500 text-white px-2 py-1 rounded"
-              >
-                Delete My Rating
-              </button>
-            )}
           </>
+        )}
+        {token && userRatingId && (
+          <button
+            onClick={handleDeleteRating}
+            className="ml-2 text-sm bg-red-500 text-white px-2 py-1 rounded"
+          >
+            Delete My Rating
+          </button>
         )}
       </div>
 

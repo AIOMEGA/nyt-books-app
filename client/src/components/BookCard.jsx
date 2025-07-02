@@ -174,12 +174,13 @@ useEffect(() => {
           href={book.amazon_product_url}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-blue-600 underline"
+          className="inline-block bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-2 px-4 rounded shadow transition"
         >
           Buy on Amazon
         </a>
+        </div>
 
-        <div className="mt-4 space-y-2">
+      <div className="mt-4 space-y-2">
         <div className="flex items-center gap-1">
           {renderStars(ratings?.average || 0)}
           <span className="ml-2 text-sm text-gray-700">
@@ -282,9 +283,11 @@ useEffect(() => {
               Submit
             </button>
           </div>
+          ) : (
+            <p className="text-sm text-gray-500">Login to add a comment</p>
         )}
       </div>
-    </motion.div>
+      </motion.div>
   );
 });
 

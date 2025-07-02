@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import React from 'react';
+import { motion } from 'framer-motion';
 
 const PLACEHOLDER_IMG = 'https://via.placeholder.com/128x193?text=No+Image';
 
@@ -135,54 +136,85 @@ useEffect(() => {
     e.target.src = PLACEHOLDER_IMG;
   };
 
+  const renderStars = (rating) => {
+    const stars = [];
+    for (let i = 1; i <= 5; i += 1) {
+      stars.push(
+        <svg
+          key={i}
+          className={`w-4 h-4 ${rating >= i ? 'text-yellow-400' : 'text-gray-300'}`}
+          fill="currentColor"
+          viewBox="0 0 20 20"
+        >
+          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.966a1 1 0 00.95.69h4.175c.969 0 1.371 1.24.588 1.81l-3.38 2.455a1 1 0 00-.364 1.118l1.287 3.966c.3.921-.755 1.688-1.538 1.118l-3.38-2.455a1 1 0 00-1.176 0l-3.38 2.455c-.783.57-1.838-.197-1.538-1.118l1.287-3.966a1 1 0 00-.364-1.118L2.05 9.393c-.783-.57-.38-1.81.588-1.81h4.175a1 1 0 00.95-.69l1.286-3.966z" />
+        </svg>
+      );
+    }
+    return stars;
+  };
+
   return (
-    <div className="p-4 border rounded shadow-sm">
-      <h2 className="text-lg font-bold">{book.title}</h2>
-      <p className="text-sm text-gray-700 italic mb-2">by {book.author}</p>
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      whileHover={{ scale: 1.02 }}
+      className="group p-4 border rounded shadow-sm bg-white flex flex-col sm:flex-row gap-4 transition"
+    >
       <img
         src={book.book_image}
         alt={book.title}
         onError={handleImgError}
-        className="w-32 mb-2"
+        className="w-32 h-auto rounded self-center sm:self-start shadow-md transition-transform group-hover:scale-105"
       />
-      <p className="text-gray-800 mb-2">{book.description}</p>
-      <a
-        href={book.amazon_product_url}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="text-blue-600 underline"
-      >
-        Buy on Amazon
-      </a>
+      <div className="flex-1 space-y-2">
+        <h2 className="text-lg font-bold">{book.title}</h2>
+        <p className="text-sm text-gray-700 italic">by {book.author}</p>
+        <p className="text-gray-800">{book.description}</p>
+        <a
+          href={book.amazon_product_url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-blue-600 underline"
+        >
+          Buy on Amazon
+        </a>
 
-      <div className="mt-4">
-        <h3 className="font-semibold">Average Rating: {ratings?.average?.toFixed(2) || 'N/A'}</h3>
-        {token && !userRatingId && (
-          <>
-            <input
-              type="number"
-              min="1"
-              max="5"
-              placeholder="Rate 1-5"
-              value={newRating}
-              onChange={(e) => setNewRating(e.target.value)}
-              className="border p-1 w-20 mr-2"
-            />
+        <div className="mt-4 space-y-2">
+        <div className="flex items-center gap-1">
+          {renderStars(ratings?.average || 0)}
+          <span className="ml-2 text-sm text-gray-700">
+            {ratings?.average?.toFixed(2) || 'N/A'}
+          </span>
+        </div>
+        {token ? (
+          userRatingId ? (
             <button
-              onClick={handleRatingSubmit}
-              className="text-sm bg-green-500 text-white px-2 py-1 rounded"
+              onClick={handleDeleteRating}
+              className="text-sm bg-red-500 text-white px-2 py-1 rounded"
             >
-              Submit Rating
+              Delete My Rating
             </button>
-          </>
-        )}
-        {token && userRatingId && (
-          <button
-            onClick={handleDeleteRating}
-            className="ml-2 text-sm bg-red-500 text-white px-2 py-1 rounded"
-          >
-            Delete My Rating
-          </button>
+          ) : (
+            <div className="flex items-center gap-2">
+              <input
+                type="number"
+                min="1"
+                max="5"
+                placeholder="Rate 1-5"
+                value={newRating}
+                onChange={(e) => setNewRating(e.target.value)}
+                className="border p-1 w-20"
+              />
+              <button
+                onClick={handleRatingSubmit}
+                className="text-sm bg-green-500 text-white px-2 py-1 rounded"
+              >
+                Submit Rating
+              </button>
+            </div>
+          )
+        ) : (
+          <p className="text-sm text-gray-500">Login to rate this book</p>
         )}
       </div>
 
@@ -235,7 +267,7 @@ useEffect(() => {
             </li>
           ))}
         </ul>
-        {token && (
+        {token ? (
           <div className="mt-2 flex gap-2">
             <input
               placeholder="Add a comment"
@@ -252,7 +284,7 @@ useEffect(() => {
           </div>
         )}
       </div>
-    </div>
+    </motion.div>
   );
 });
 

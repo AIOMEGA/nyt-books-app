@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import axios from 'axios';
+import { motion } from 'framer-motion';
 
 export default function AuthForm({ onAuth, token }) {
   const [username, setUsername] = useState('');
@@ -25,21 +26,29 @@ export default function AuthForm({ onAuth, token }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="mb-4 flex gap-2 items-end">
+    <motion.form
+      onSubmit={handleSubmit}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="mb-6 p-4 bg-white shadow rounded flex flex-col sm:flex-row sm:items-end gap-2"
+    >
       <input
-        className="border p-1"
+        className="border p-2 rounded flex-1"
         placeholder="Username"
         value={username}
         onChange={(e) => setUsername(e.target.value)}
       />
       <input
         type="password"
-        className="border p-1"
+        className="border p-2 rounded flex-1"
         placeholder="Password"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
       />
-      <button className="bg-blue-500 text-white px-2 py-1 rounded" type="submit">
+      <button
+        className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded transition-colors"
+        type="submit"
+      >
         {isRegister ? 'Register' : 'Login'}
       </button>
       <button
@@ -49,6 +58,6 @@ export default function AuthForm({ onAuth, token }) {
       >
         {isRegister ? 'Need to Login?' : 'Need to Register?'}
       </button>
-    </form>
+    </motion.form>
   );
 }

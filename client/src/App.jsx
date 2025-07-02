@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import BookCard from './components/BookCard.jsx';
 import AuthForm from './components/AuthForm.jsx';
+import { AnimatePresence, motion } from 'framer-motion';
 
 function App() {
   const [query, setQuery] = useState('');
@@ -50,18 +51,18 @@ function App() {
   };
 
   return (
-    <div className="p-6 max-w-3xl mx-auto">
-      <h1 className="text-2xl font-bold mb-4">NYT Book Search</h1>
+    <motion.div className="p-6 max-w-4xl mx-auto space-y-6">
+      <h1 className="text-3xl font-bold text-center">NYT Book Search</h1>
       <AuthForm onAuth={handleAuth} token={auth?.token} />
       {auth && (
         <button
           onClick={handleLogout}
-          className="mb-4 bg-gray-300 px-2 py-1 rounded"
+          className="mb-4 self-start bg-gray-300 px-3 py-1 rounded"
         >
           Logout
         </button>
       )}
-      <div className="flex gap-2 mb-4">
+      <div className="flex gap-2">
         <input
           className="flex-1 border p-2 rounded"
           placeholder="Search by category name (e.g., 'fiction')"
@@ -76,20 +77,24 @@ function App() {
         </button>
       </div>
 
-      {books.length === 0 ? ( 
-        <p className="text-gray-500 italic">No results found.</p>) : (
-        <div className="space-y-6">
-          {books.map((book) => (
-            <BookCard
-              key={book.primary_isbn13}
-              book={book}
-              userId={auth?.userId}
-              token={auth?.token}
-            />
-          ))}
-        </div>
+      {books.length === 0 ? (
+        <p className="text-gray-500 italic">No results found.</p>
+      ) : (
+        <AnimatePresence>
+          <div className="space-y-6">
+            {books.map((book) => (
+              <motion.div key={book.primary_isbn13} layout>
+                <BookCard
+                  book={book}
+                  userId={auth?.userId}
+                  token={auth?.token}
+                />
+              </motion.div>
+            ))}
+          </div>
+        </AnimatePresence>
       )}
-    </div>
+    </motion.div>
   );
 }
 

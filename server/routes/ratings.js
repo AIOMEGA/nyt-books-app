@@ -42,11 +42,13 @@ router.get('/:bookId', async (req, res) => {
 // Update a rating by id
 router.put('/:id', auth, async (req, res) => {
     try {
-        const rating = await Rating.findByIdAndUpdate(
-            req.params.id,
-            { score: req.body.score },
-            { new: true }
-        );
+        const rating = await Rating.findById(req.params.id);
+        if (!rating) return res.status(404).json({ error: 'Rating not found' });
+        if (rating.userId !== req.userId)
+            return res.status(403).json({ error: 'Not authorized' });
+
+        rating.score = req.body.score;
+        await rating.save();
         res.json(rating);
     } catch (err) {
         console.error(err);
@@ -57,6 +59,11 @@ router.put('/:id', auth, async (req, res) => {
 // Delete a rating by id
 router.delete('/:id', auth, async (req, res) => {
     try {
+        const rating = await Rating.findById(req.params.id);
+        if (!rating) return res.status(404).json({ error: 'Rating not found' });
+        if (rating.userId !== req.userId)
+            return res.status(403).json({ error: 'Not authorized' });
+        
         await Rating.findByIdAndDelete(req.params.id);
         res.json({ message: 'Rating deleted' });
     } catch (err) {

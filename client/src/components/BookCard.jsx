@@ -150,31 +150,32 @@ const BookCard = React.memo(function BookCard({ book, userId, token }) {
 
       <div className="mt-4">
         <h3 className="font-semibold">Average Rating: {ratings?.average?.toFixed(2) || 'N/A'}</h3>
-        <input
-          type="number"
-          min="1"
-          max="5"
-          placeholder="Rate 1-5"
-          value={newRating}
-          onChange={(e) => setNewRating(e.target.value)}
-          className="border p-1 w-20 mr-2"
-          disabled={!token}
-        />
-        <button
-          onClick={handleRatingSubmit}
-          className="text-sm bg-green-500 text-white px-2 py-1 rounded"
-          disabled={!token}
-        >
-          Submit Rating
-        </button>
-        {userRatingId && (
-          <button
-            onClick={handleDeleteRating}
-            className="ml-2 text-sm bg-red-500 text-white px-2 py-1 rounded"
-            disabled={!token}
-          >
-            Delete My Rating
-          </button>
+        {token && (
+          <>
+            <input
+              type="number"
+              min="1"
+              max="5"
+              placeholder="Rate 1-5"
+              value={newRating}
+              onChange={(e) => setNewRating(e.target.value)}
+              className="border p-1 w-20 mr-2"
+            />
+            <button
+              onClick={handleRatingSubmit}
+              className="text-sm bg-green-500 text-white px-2 py-1 rounded"
+            >
+              Submit Rating
+            </button>
+            {userRatingId && (
+              <button
+                onClick={handleDeleteRating}
+                className="ml-2 text-sm bg-red-500 text-white px-2 py-1 rounded"
+              >
+                Delete My Rating
+              </button>
+            )}
+          </>
         )}
       </div>
 
@@ -183,7 +184,7 @@ const BookCard = React.memo(function BookCard({ book, userId, token }) {
         <ul className="list-disc ml-5 text-sm text-gray-700 space-y-1">
           {comments.map((comment) => (
             <li key={comment._id} className="flex items-start gap-2">
-              {editingCommentId === comment._id ? (
+              {editingCommentId === comment._id && token && comment.userId === userId ? (
                 <>
                   <input
                     className="border p-1 flex-1"
@@ -193,7 +194,6 @@ const BookCard = React.memo(function BookCard({ book, userId, token }) {
                   <button
                     onClick={handleEditComment}
                     className="text-sm bg-green-500 text-white px-1 rounded"
-                    disabled={!token}
                   >
                     Save
                   </button>
@@ -207,41 +207,43 @@ const BookCard = React.memo(function BookCard({ book, userId, token }) {
               ) : (
                 <>
                   <span className="flex-1">{comment.text}</span>
-                  <button
-                    onClick={() => { setEditingCommentId(comment._id); setEditingCommentText(comment.text); }}
-                    className="text-xs text-blue-600"
-                    disabled={!token}
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => handleDeleteComment(comment._id)}
-                    className="text-xs text-red-600"
-                    disabled={!token}
-                  >
-                    Delete
-                  </button>
+                  {token && comment.userId === userId && (
+                    <>
+                      <button
+                        onClick={() => { setEditingCommentId(comment._id); setEditingCommentText(comment.text); }}
+                        className="text-xs text-blue-600"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => handleDeleteComment(comment._id)}
+                        className="text-xs text-red-600"
+                      >
+                        Delete
+                      </button>
+                    </>
+                  )}
                 </>
               )}
             </li>
           ))}
         </ul>
-        <div className="mt-2 flex gap-2">
-          <input
-            placeholder="Add a comment"
-            value={newComment}
-            onChange={(e) => setNewComment(e.target.value)}
-            className="border p-1 flex-1"
-            disabled={!token}
-          />
-          <button
-            onClick={handleCommentSubmit}
-            className="text-sm bg-blue-500 text-white px-2 py-1 rounded"
-            disabled={!token}
-          >
-            Submit
-          </button>
-        </div>
+        {token && (
+          <div className="mt-2 flex gap-2">
+            <input
+              placeholder="Add a comment"
+              value={newComment}
+              onChange={(e) => setNewComment(e.target.value)}
+              className="border p-1 flex-1"
+            />
+            <button
+              onClick={handleCommentSubmit}
+              className="text-sm bg-blue-500 text-white px-2 py-1 rounded"
+            >
+              Submit
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -32,12 +32,14 @@ router.get('/:bookId', async (req, res) => {
 // Update a comment by ID
 router.put('/:id', auth, async (req, res) => {
     try {
-        const updated = await Comment.findByIdAndUpdate(
-            req.params.id,
-            { text: req.body.text },
-            { new: true }
-        );
-        res.json(updated);
+        const comment = await Comment.findById(req.params.id);
+        if (!comment) return res.status(404).json({ error: 'Comment not found' });
+        if (comment.userId !== req.userId)
+            return res.status(403).json({ error: 'Not authorized' });
+
+        comment.text = req.body.text;
+        await comment.save();
+        res.json(comment);
     } catch (err) {
         console.error('Error updating comment:', err);
         res.status(500).json({ error: 'Failed to update comment' });
@@ -47,6 +49,11 @@ router.put('/:id', auth, async (req, res) => {
 // Delete a comment by ID
 router.delete('/:id', auth, async (req, res) => {
     try {
+        const comment = await Comment.findById(req.params.id);
+        if (!comment) return res.status(404).json({ error: 'Comment not found' });
+        if (comment.userId !== req.userId)
+            return res.status(403).json({ error: 'Not authorized' });
+        
         await Comment.findByIdAndDelete(req.params.id);
         res.json({ message: 'Comment deleted' });
     } catch (err) {

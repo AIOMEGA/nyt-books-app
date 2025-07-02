@@ -1,0 +1,41 @@
+const express = require('express');
+const router = express.Router();
+const Comment = require('../models/Comment');
+
+// Create a comment
+router.post('/', async (req, res) => {
+    try {
+        const { bookId, text } = req.body;
+        const comment = new Comment({ bookId, text });
+        await comment.save();
+        res.status(201).json(comment);
+    } catch (err) {
+        console.error('Error creating comment:', err);
+        res.status(500).json({ error: 'Failed to create comment' });
+    }
+});
+
+// Get all comments for a specific book
+router.get('/:bookId', async (req, res) => {
+    try {
+        const { bookId } = req.params;
+        const comments = await Comment.find({ bookId }).sort({ createdAt: -1 });
+        res.json(comments);
+    } catch (err) {
+        console.error('Error fetching comments:', err);
+        res.status(500).json({ error: 'Failed to fetch comments' });
+    }
+});
+
+// Delete a comment by ID
+router.delete('/:id', async (req, res) => {
+    try {
+        await Comment.findByIdAndDelete(req.params.id);
+        res.json({ message: 'Comment deleted' });
+    } catch (err) {
+        console.error('Error deleting comment:', err);
+        res.status(500).json({ error: 'Failed to delete comment' });
+    }
+});
+
+module.exports = router;

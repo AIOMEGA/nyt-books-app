@@ -3,6 +3,7 @@ import axios from 'axios';
 import React from 'react';
 import { motion } from 'framer-motion';
 import RatingBreakdown from './RatingBreakdown.jsx';
+import CommentBox from './CommentBox.jsx';
 
 const PLACEHOLDER_IMG = 'https://via.placeholder.com/128x193?text=No+Image';
 
@@ -11,9 +12,6 @@ const BookCard = React.memo(function BookCard({ book, userId, token }) {
 
   const [comments, setComments] = useState([]);
   const [ratings, setRatings] = useState({});
-  const [newComment, setNewComment] = useState('');
-  const [editingCommentId, setEditingCommentId] = useState(null);
-  const [editingCommentText, setEditingCommentText] = useState('');
   const [hoverRating, setHoverRating] = useState(null);
   const [userRating, setUserRating] = useState(() => {
     const data = localStorage.getItem('userRatings');
@@ -52,55 +50,53 @@ useEffect(() => {
     } catch (err) {
       console.error(`Error fetching data for ${bookId}:`, err);
     }
-}, [bookId]);
+  }, [bookId]);
 
   useEffect(() => {
     fetchBookData();
   }, [fetchBookData]);
 
-  const handleCommentSubmit = useCallback(async () => {
-    if (!newComment) return;
+  const handleCommentSubmit = useCallback(async (text) => {
+    if (!text) return;
     try {
       await axios.post(
         'http://localhost:5000/api/comments',
-        { bookId, text: newComment },
+        { bookId, text },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      setNewComment('');
       const res = await axios.get(`http://localhost:5000/api/comments/${bookId}`);
       setComments(res.data);
     } catch (err) {
       console.error('Failed to post comment:', err);
     }
-}, [newComment, bookId, token]);
+  }, [bookId, token]);
 
-  const handleEditComment = useCallback(async () => {
+  const handleEditComment = useCallback(async (id, text) => {
     if (!editingCommentId) return;
     try {
       await axios.put(
-        `http://localhost:5000/api/comments/${editingCommentId}`,
-        { text: editingCommentText },
+        `http://localhost:5000/api/comments/${id}`,
+        { text },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      setEditingCommentId(null);
-      setEditingCommentText('');
       const res = await axios.get(`http://localhost:5000/api/comments/${bookId}`);
       setComments(res.data);
     } catch (err) {
       console.error('Failed to update comment:', err);
     }
-}, [editingCommentId, editingCommentText, bookId, token]);
+  }, [bookId, token]);
 
   const handleDeleteComment = useCallback(async (id) => {
     try {
-      await axios.delete(`http://localhost:5000/api/comments/${id}`,
-        { headers: { Authorization: `Bearer ${token}` } });
+      await axios.delete(`http://localhost:5000/api/comments/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       const res = await axios.get(`http://localhost:5000/api/comments/${bookId}`);
       setComments(res.data);
     } catch (err) {
       console.error('Failed to delete comment:', err);
     }
-}, [bookId, token]);
+  }, [bookId, token]);
 
   const handleStarClick = useCallback(async (value) => {
     if (!token) return;
@@ -253,71 +249,15 @@ useEffect(() => {
       </div>
 
       <div className="mt-4">
-        <h3 className="font-semibold mb-2">Comments:</h3>
-        <ul className="list-disc ml-5 text-sm text-gray-700 space-y-1">
-          {comments.map((comment) => (
-            <li key={comment._id} className="flex items-start gap-2">
-              {editingCommentId === comment._id && token && comment.userId === userId ? (
-                <>
-                  <input
-                    className="border p-1 flex-1"
-                    value={editingCommentText}
-                    onChange={(e) => setEditingCommentText(e.target.value)}
-                  />
-                  <button
-                    onClick={handleEditComment}
-                    className="text-sm bg-green-500 text-white px-1 rounded"
-                  >
-                    Save
-                  </button>
-                  <button
-                    onClick={() => { setEditingCommentId(null); setEditingCommentText(''); }}
-                    className="text-sm bg-gray-300 px-1 rounded"
-                  >
-                    Cancel
-                  </button>
-                </>
-              ) : (
-                <>
-                  <span className="flex-1">{comment.text}</span>
-                  {token && comment.userId === userId && (
-                    <>
-                      <button
-                        onClick={() => { setEditingCommentId(comment._id); setEditingCommentText(comment.text); }}
-                        className="text-xs text-blue-600"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => handleDeleteComment(comment._id)}
-                        className="text-xs text-red-600"
-                      >
-                        Delete
-                      </button>
-                    </>
-                  )}
-                </>
-              )}
-            </li>
-          ))}
-        </ul>
-        {token ? (
-          <div className="mt-2 flex gap-2">
-            <input
-              placeholder="Add a comment"
-              value={newComment}
-              onChange={(e) => setNewComment(e.target.value)}
-              className="border p-1 flex-1"
-            />
-            <button
-              onClick={handleCommentSubmit}
-              className="text-sm bg-blue-500 text-white px-2 py-1 rounded"
-            >
-              Submit
-            </button>
-          </div>
-          ) : (
-            <p className="text-sm text-gray-500">Login to add a comment</p>
+      <CommentBox
+          comments={comments}
+          userId={userId}
+          onSubmit={(text) => token && handleCommentSubmit(text)}
+          onEdit={(id, text) => token && handleEditComment(id, text)}
+          onDelete={(id) => token && handleDeleteComment(id)}
+        />
+        {!token && (
+          <p className="text-sm text-gray-500 mt-2">Login to add a comment</p>
         )}
       </div>
       </motion.div>

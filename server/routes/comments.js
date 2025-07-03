@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Comment = require('../models/Comment');
 const auth = require('../middleware/auth');
+const User = require('../models/User');
 
 // Create a comment
 router.post('/', auth, async (req, res) => {
@@ -10,7 +11,8 @@ router.post('/', auth, async (req, res) => {
         const userId = req.userId;
         const comment = new Comment({ bookId, userId, text });
         await comment.save();
-        res.status(201).json(comment);
+        const user = await User.findById(userId).select('username');
+        res.status(201).json({ ...comment.toObject(), username: user ? user.username : 'Unknown' });
     } catch (err) {
         console.error('Error creating comment:', err);
         res.status(500).json({ error: 'Failed to create comment' });
@@ -22,7 +24,13 @@ router.get('/:bookId', async (req, res) => {
     try {
         const { bookId } = req.params;
         const comments = await Comment.find({ bookId }).sort({ createdAt: -1 });
-        res.json(comments);
+        const commentsWithUser = await Promise.all(
+            comments.map(async (c) => {
+                const user = await User.findById(c.userId).select('username');
+                return { ...c.toObject(), username: user ? user.username : 'Unknown' };
+            })
+        );
+        res.json(commentsWithUser);
     } catch (err) {
         console.error('Error fetching comments:', err);
         res.status(500).json({ error: 'Failed to fetch comments' });

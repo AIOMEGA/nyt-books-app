@@ -4,6 +4,7 @@ export default function CommentBox({ comments = [], onSubmit, onEdit, onDelete, 
   const [text, setText] = useState('');
   const [editingId, setEditingId] = useState(null);
   const [editingText, setEditingText] = useState('');
+  const [openMenuId, setOpenMenuId] = useState(null);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -25,7 +26,7 @@ export default function CommentBox({ comments = [], onSubmit, onEdit, onDelete, 
       <h3 className="font-semibold mb-1">Comments:</h3>
       <div className="flex-1 max-h-24 overflow-y-auto space-y-1 text-sm mb-2">
         {comments.map((c) => (
-          <div key={c._id} className="leading-snug flex gap-2">
+          <div key={c._id} className="leading-snug flex gap-2 relative">
             {editingId === c._id ? (
               <>
                 <input
@@ -52,20 +53,37 @@ export default function CommentBox({ comments = [], onSubmit, onEdit, onDelete, 
                   <span className="font-medium">{c.username}</span>: {c.text}
                 </span>
                 {userId === c.userId && (
-                  <>
+                  <div className="relative">
                     <button
-                      onClick={() => { setEditingId(c._id); setEditingText(c.text); }}
-                      className="text-xs text-blue-600"
+                      onClick={() => setOpenMenuId(openMenuId === c._id ? null : c._id)}
+                      className="px-2 text-gray-500 hover:text-gray-700"
                     >
-                      Edit
+                      &#8942;
                     </button>
-                    <button
-                      onClick={() => onDelete && onDelete(c._id)}
-                      className="text-xs text-red-600"
-                    >
-                      Delete
-                    </button>
-                  </>
+                    {openMenuId === c._id && (
+                      <div className="absolute right-0 mt-1 bg-white border rounded shadow z-10 p-1 flex flex-col">
+                        <button
+                          onClick={() => {
+                            setEditingId(c._id);
+                            setEditingText(c.text);
+                            setOpenMenuId(null);
+                          }}
+                          className="text-xs px-2 py-1 rounded border hover:bg-gray-100 text-left"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => {
+                            onDelete && onDelete(c._id);
+                            setOpenMenuId(null);
+                          }}
+                          className="text-xs px-2 py-1 rounded border mt-1 hover:bg-gray-100 text-left text-red-600"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 )}
               </>
             )}

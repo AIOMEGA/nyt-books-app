@@ -1,30 +1,39 @@
-import { useState } from 'react';
-import axios from 'axios';
-import { motion } from 'framer-motion';
+// Login/registration form component
+import { useState } from "react";
+import axios from "axios";
+import { motion } from "framer-motion";
 
 export default function AuthForm({ onAuth, token }) {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
+  // Controlled input state
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  // Toggles between login and register modes
   const [isRegister, setIsRegister] = useState(false);
 
+  // Send credentials to the server on submit
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const url = isRegister ? '/api/auth/register' : '/api/auth/login';
-      const res = await axios.post(`http://localhost:5000${url}`, { username, password });
+      const url = isRegister ? "/api/auth/register" : "/api/auth/login";
+      const res = await axios.post(`http://localhost:5000${url}`, {
+        username,
+        password,
+      });
       onAuth(res.data);
-      setUsername('');
-      setPassword('');
+      setUsername("");
+      setPassword("");
     } catch (err) {
-      console.error('Auth error:', err);
-      alert('Authentication failed');
+      console.error("Auth error:", err);
+      alert("Authentication failed");
     }
   };
 
+  // Hide the form if user is already authenticated
   if (token) {
     return null;
   }
 
+  // Render the login/register form
   return (
     <motion.form
       onSubmit={handleSubmit}
@@ -49,14 +58,14 @@ export default function AuthForm({ onAuth, token }) {
         className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded transition-colors"
         type="submit"
       >
-        {isRegister ? 'Register' : 'Login'}
+        {isRegister ? "Register" : "Login"}
       </button>
       <button
         type="button"
         onClick={() => setIsRegister(!isRegister)}
         className="underline text-sm"
       >
-        {isRegister ? 'Need to Login?' : 'Need to Register?'}
+        {isRegister ? "Need to Login?" : "Need to Register?"}
       </button>
     </motion.form>
   );

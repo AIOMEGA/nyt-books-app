@@ -1,26 +1,39 @@
-import React, { useState } from 'react';
+// Comment list and entry form component
+import React, { useState } from "react";
 
-export default function CommentBox({ comments = [], onSubmit, onEdit, onDelete, userId }) {
-  const [text, setText] = useState('');
+export default function CommentBox({
+  comments = [],
+  onSubmit,
+  onEdit,
+  onDelete,
+  userId,
+}) {
+  // New comment text
+  const [text, setText] = useState("");
+  // Track which comment is being edited
   const [editingId, setEditingId] = useState(null);
-  const [editingText, setEditingText] = useState('');
+  const [editingText, setEditingText] = useState("");
+  // Which comment's menu is open
   const [openMenuId, setOpenMenuId] = useState(null);
 
+  // Submit a new comment
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!text.trim()) return;
     if (onSubmit) onSubmit(text.trim());
-    setText('');
+    setText("");
   };
 
+  // Save edits to an existing comment
   const handleEditSubmit = (e) => {
     e.preventDefault();
     if (!editingText.trim()) return;
     if (onEdit) onEdit(editingId, editingText.trim());
     setEditingId(null);
-    setEditingText('');
+    setEditingText("");
   };
 
+  // Render comment list and editor
   return (
     <div className="border p-3 bg-gray-600 rounded flex flex-col min-h-[185px]">
       <h3 className="font-semibold mb-1">Comments:</h3>
@@ -41,7 +54,10 @@ export default function CommentBox({ comments = [], onSubmit, onEdit, onDelete, 
                   Save
                 </button>
                 <button
-                  onClick={() => { setEditingId(null); setEditingText(''); }}
+                  onClick={() => {
+                    setEditingId(null);
+                    setEditingText("");
+                  }}
                   className="text-xs bg-gray-300 px-1 rounded text-gray-600"
                 >
                   Cancel
@@ -55,7 +71,9 @@ export default function CommentBox({ comments = [], onSubmit, onEdit, onDelete, 
                 {userId === c.userId && (
                   <div className="relative">
                     <button
-                      onClick={() => setOpenMenuId(openMenuId === c._id ? null : c._id)}
+                      onClick={() =>
+                        setOpenMenuId(openMenuId === c._id ? null : c._id)
+                      }
                       className="px-2 text-black-500 hover:text-black-700"
                     >
                       &#8942;

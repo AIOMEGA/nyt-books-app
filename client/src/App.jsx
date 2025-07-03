@@ -1,51 +1,61 @@
-import { useState, useEffect } from 'react';
-import axios from 'axios';
-import BookCard from './components/BookCard.jsx';
-import AuthForm from './components/AuthForm.jsx';
-import { AnimatePresence, motion } from 'framer-motion';
+import { useState, useEffect, useCallback } from "react";
+import axios from "axios";
+import BookCard from "./components/BookCard.jsx";
+import AuthForm from "./components/AuthForm.jsx";
+import { AnimatePresence, motion } from "framer-motion";
 
 function App() {
-  const [query, setQuery] = useState('');
+  // Search text input by the user
+  const [query, setQuery] = useState("");
+  // Array of book results from the API
   const [books, setBooks] = useState([]);
+  // Authentication state (token & user id)
   const [auth, setAuth] = useState(() => {
-    const token = localStorage.getItem('token');
-    const userId = localStorage.getItem('userId');
+    const token = localStorage.getItem("token");
+    const userId = localStorage.getItem("userId");
     return token && userId ? { token, userId } : null;
   });
 
+  // Avoid rendering tons of results
   const MAX_RESULTS = 100;
 
-  const searchBooks = async () => {
+  // Query our backend which proxies the NYT API
+  const searchBooks = useCallback(async () => {
     try {
-      const res = await axios.get(`http://localhost:5000/api/books/search?q=${query}`);
+      const res = await axios.get(
+        `http://localhost:5000/api/books/search?q=${query}`
+      );
       const foundBooks = res.data.results || [];
-
       setBooks(foundBooks.slice(0, MAX_RESULTS));
     } catch (err) {
-      console.error('Error fetching books:', err);
+      console.error("Error fetching books:", err);
     }
-  };
+  }, [query]);
 
+  // Fire off searches as the user types (debounced)
   useEffect(() => {
     const t = setTimeout(() => {
       searchBooks();
     }, 500);
     return () => clearTimeout(t);
-  }, [query]);
+  }, [query, searchBooks]);
 
+  // When login/register succeeds save credentials
   const handleAuth = ({ token, userId }) => {
     const data = { token, userId };
     setAuth(data);
-    localStorage.setItem('token', token);
-    localStorage.setItem('userId', userId);
+    localStorage.setItem("token", token);
+    localStorage.setItem("userId", userId);
   };
 
+  // Clear auth state
   const handleLogout = () => {
     setAuth(null);
-    localStorage.removeItem('token');
-    localStorage.removeItem('userId');
+    localStorage.removeItem("token");
+    localStorage.removeItem("userId");
   };
 
+  // Render search UI and list of books
   return (
     <motion.div className="p-6 max-w-4xl mx-auto space-y-6">
       <h1 className="text-3xl font-bold text-center">NYT Book Search</h1>

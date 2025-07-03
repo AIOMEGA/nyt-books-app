@@ -1,12 +1,13 @@
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
+dotenv.config();
 const mongoose = require('mongoose');
 const ratingsRouter = require('./routes/ratings');
 const commentsRouter = require('./routes/comments');
 const authRouter = require('./routes/auth');
 
-dotenv.config();
+const categoriesRouter = require('./routes/categories');
 
 const app = express();
 app.use(cors({
@@ -17,6 +18,7 @@ app.use(express.json());
 app.use('/api/auth', authRouter);
 app.use('/api/ratings', ratingsRouter);
 app.use('/api/comments', commentsRouter);
+app.use('/api/categories', categoriesRouter);
 
 const PORT = process.env.PORT || 5000;
 

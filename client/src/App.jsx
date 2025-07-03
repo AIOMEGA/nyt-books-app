@@ -13,7 +13,7 @@ function App() {
     return token && userId ? { token, userId } : null;
   });
 
-  const MAX_RESULTS = 10;
+  const MAX_RESULTS = 100;
 
   const searchBooks = async () => {
     try {
@@ -27,10 +27,6 @@ function App() {
   };
 
   useEffect(() => {
-    if (!query.trim()) {
-      setBooks([]);
-      return;
-    }
     const t = setTimeout(() => {
       searchBooks();
     }, 500);

@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import React from 'react';
 import { motion } from 'framer-motion';
+import RatingBreakdown from './RatingBreakdown.jsx';
 
 const PLACEHOLDER_IMG = 'https://via.placeholder.com/128x193?text=No+Image';
 
@@ -248,6 +249,7 @@ useEffect(() => {
         ) : (
           <p className="text-sm text-gray-500">Login to rate this book</p>
         )}
+        <RatingBreakdown ratings={ratings?.scores || []} />
       </div>
 
       <div className="mt-4">

@@ -23,21 +23,23 @@ router.post('/', auth, async (req, res) => {
     }
 });
 
-// GET average rating for a book
+// GET average rating and breakdown for a book
 router.get('/:bookId', async (req, res) => {
     const { bookId } = req.params;
     try {
         const ratings = await Rating.find({ bookId, score: { $exists: true } });
         const validRatings = ratings.filter(r => typeof r.score === 'number');
-        if (validRatings.length === 0) return res.json({ average: null });
+        if (validRatings.length === 0) return res.json({ average: null, scores: [] });
         
         const rawAvg = validRatings.reduce((acc, curr) => acc + curr.score, 0) / validRatings.length;
         const average = Math.round(rawAvg * 2) / 2; // round to nearest 0.5
         
-        res.json({ average });
+        const scores = validRatings.map(r => r.score);
+
+        res.json({ average, scores });
     } catch (err) {
-    res.status(500).json({ error: 'Failed to fetch ratings' });
-  }
+        res.status(500).json({ error: 'Failed to fetch ratings' });
+    }
 });
 
 // Update a rating by id

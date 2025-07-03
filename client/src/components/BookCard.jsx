@@ -11,34 +11,34 @@ const BookCard = React.memo(function BookCard({ book, userId, token }) {
   const [comments, setComments] = useState([]);
   const [ratings, setRatings] = useState({});
   const [newComment, setNewComment] = useState('');
-  const [newRating, setNewRating] = useState('');
   const [editingCommentId, setEditingCommentId] = useState(null);
   const [editingCommentText, setEditingCommentText] = useState('');
-const [userRatingId, setUserRatingId] = useState(() => {
+  const [hoverRating, setHoverRating] = useState(null);
+  const [userRating, setUserRating] = useState(() => {
     const data = localStorage.getItem('userRatings');
     if (!data) return null;
     const map = JSON.parse(data);
     return map[`${userId}_${bookId}`] || null;
 });
 
-// Keep the stored rating id in sync when user or book changes
+// Keep the stored rating data in sync when user or book changes
 useEffect(() => {
     const data = localStorage.getItem('userRatings');
     const map = data ? JSON.parse(data) : {};
-    setUserRatingId(map[`${userId}_${bookId}`] || null);
+    setUserRating(map[`${userId}_${bookId}`] || null);
 }, [userId, bookId]);
 
 useEffect(() => {
     const data = localStorage.getItem('userRatings');
     const map = data ? JSON.parse(data) : {};
     const key = `${userId}_${bookId}`;
-    if (userRatingId) {
-      map[key] = userRatingId;
+    if (userRating) {
+        map[key] = userRating;
     } else {
       delete map[key];
     }
     localStorage.setItem('userRatings', JSON.stringify(map));
-}, [userRatingId, bookId, userId]);
+}, [userRating, bookId, userId]);
 
   const fetchBookData = useCallback(async () => {
     try {
@@ -101,36 +101,28 @@ useEffect(() => {
     }
 }, [bookId, token]);
 
-  const handleRatingSubmit = useCallback(async () => {
-    const ratingValue = parseInt(newRating);
-    if (!ratingValue || ratingValue < 1 || ratingValue > 5) return;
+  const handleStarClick = useCallback(async (value) => {
+    if (!token) return;
     try {
-      const res = await axios.post(
-        'http://localhost:5000/api/ratings',
-        { bookId, score: ratingValue },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      setUserRatingId(res.data._id);
-      setNewRating('');
-      await fetchBookData();
-    } catch (err) {
-      console.error('Failed to post rating:', err);
-    }
-}, [newRating, bookId, fetchBookData, token]);
-
-  const handleDeleteRating = useCallback(async () => {
-    if (!userRatingId) return;
-    try {
-      await axios.delete(
-        `http://localhost:5000/api/ratings/${userRatingId}`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      setUserRatingId(null);
-      await fetchBookData();
-    } catch (err) {
-      console.error('Failed to delete rating:', err);
-    }
-}, [userRatingId, fetchBookData, token]);
+        if (userRating && Math.abs(userRating.score - value) < 0.001) {
+            await axios.delete(
+              `http://localhost:5000/api/ratings/${userRating.id}`,
+              { headers: { Authorization: `Bearer ${token}` } }
+            );
+            setUserRating(null);
+          } else {
+            const res = await axios.post(
+              'http://localhost:5000/api/ratings',
+              { bookId, score: value },
+              { headers: { Authorization: `Bearer ${token}` } }
+            );
+            setUserRating({ id: res.data._id, score: res.data.score });
+          }
+          await fetchBookData();
+        } catch (err) {
+            console.error('Failed to submit rating:', err);
+        }
+    }, [token, userRating, bookId, fetchBookData]);
 
   const handleImgError = (e) => {
     e.target.src = PLACEHOLDER_IMG;
@@ -138,16 +130,30 @@ useEffect(() => {
 
   const renderStars = (rating) => {
     const stars = [];
-    for (let i = 1; i <= 5; i += 1) {
+    for (let i = 0; i < 5; i += 1) {
+        const fillPercent = Math.max(0, Math.min(1, rating - i));
       stars.push(
-        <svg
-          key={i}
-          className={`w-4 h-4 ${rating >= i ? 'text-yellow-400' : 'text-gray-300'}`}
-          fill="currentColor"
-          viewBox="0 0 20 20"
-        >
-          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.966a1 1 0 00.95.69h4.175c.969 0 1.371 1.24.588 1.81l-3.38 2.455a1 1 0 00-.364 1.118l1.287 3.966c.3.921-.755 1.688-1.538 1.118l-3.38-2.455a1 1 0 00-1.176 0l-3.38 2.455c-.783.57-1.838-.197-1.538-1.118l1.287-3.966a1 1 0 00-.364-1.118L2.05 9.393c-.783-.57-.38-1.81.588-1.81h4.175a1 1 0 00.95-.69l1.286-3.966z" />
-        </svg>
+        <div key={i} className="relative w-4 h-4">
+          <svg
+            className="w-4 h-4 text-gray-300"
+            fill="currentColor"
+            viewBox="0 0 20 20"
+          >
+            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.966a1 1 0 00.95.69h4.175c.969 0 1.371 1.24.588 1.81l-3.38 2.455a1 1 0 00-.364 1.118l1.287 3.966c.3.921-.755 1.688-1.538 1.118l-3.38-2.455a1 1 0 00-1.176 0l-3.38 2.455c-.783.57-1.838-.197-1.538-1.118l1.287-3.966a1 1 0 00-.364-1.118L2.05 9.393c-.783-.57-.38-1.81.588-1.81h4.175a1 1 0 00.95-.69l1.286-3.966z" />
+          </svg>
+          <div
+            className="absolute top-0 left-0 overflow-hidden text-yellow-400"
+            style={{ width: `${fillPercent * 100}%` }}
+          >
+            <svg
+              className="w-4 h-4"
+              fill="currentColor"
+              viewBox="0 0 20 20"
+            >
+              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.966a1 1 0 00.95.69h4.175c.969 0 1.371 1.24.588 1.81l-3.38 2.455a1 1 0 00-.364 1.118l1.287 3.966c.3.921-.755 1.688-1.538 1.118l-3.38-2.455a1 1 0 00-1.176 0l-3.38 2.455c-.783.57-1.838-.197-1.538-1.118l1.287-3.966a1 1 0 00-.364-1.118L2.05 9.393c-.783-.57-.38-1.81.588-1.81h4.175a1 1 0 00.95-.69l1.286-3.966z" />
+            </svg>
+          </div>
+        </div>
       );
     }
     return stars;
@@ -184,36 +190,61 @@ useEffect(() => {
         <div className="flex items-center gap-1">
           {renderStars(ratings?.average || 0)}
           <span className="ml-2 text-sm text-gray-700">
-            {ratings?.average?.toFixed(2) || 'N/A'}
+            {ratings?.average?.toFixed(1) || 'N/A'}
           </span>
         </div>
         {token ? (
-          userRatingId ? (
-            <button
-              onClick={handleDeleteRating}
-              className="text-sm bg-red-500 text-white px-2 py-1 rounded"
-            >
-              Delete My Rating
-            </button>
-          ) : (
-            <div className="flex items-center gap-2">
-              <input
-                type="number"
-                min="1"
-                max="5"
-                placeholder="Rate 1-5"
-                value={newRating}
-                onChange={(e) => setNewRating(e.target.value)}
-                className="border p-1 w-20"
-              />
-              <button
-                onClick={handleRatingSubmit}
-                className="text-sm bg-green-500 text-white px-2 py-1 rounded"
+          <div
+          className="flex items-center gap-1"
+          onMouseLeave={() => setHoverRating(null)}
+        >
+          {Array.from({ length: 5 }, (_, i) => {
+            const displayRating =
+              hoverRating !== null ? hoverRating : userRating?.score || 0;
+            const fillPercent = Math.max(
+              0,
+              Math.min(1, displayRating - i)
+            );
+            return (
+              <div
+                key={i}
+                className="relative w-5 h-5 cursor-pointer"
+                onMouseMove={(e) => {
+                  const { left, width } = e.currentTarget.getBoundingClientRect();
+                  const x = e.clientX - left;
+                  const val = x < width / 2 ? i + 0.5 : i + 1;
+                  setHoverRating(val);
+                }}
+                onClick={(e) => {
+                  const { left, width } = e.currentTarget.getBoundingClientRect();
+                  const x = e.clientX - left;
+                  const val = x < width / 2 ? i + 0.5 : i + 1;
+                  handleStarClick(val);
+                }}
               >
-                Submit Rating
-              </button>
-            </div>
-          )
+                <svg
+                  className="w-5 h-5 text-gray-300"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.966a1 1 0 00.95.69h4.175c.969 0 1.371 1.24.588 1.81l-3.38 2.455a1 1 0 00-.364 1.118l1.287 3.966c.3.921-.755 1.688-1.538 1.118l-3.38-2.455a1 1 0 00-1.176 0l-3.38 2.455c-.783.57-1.838-.197-1.538-1.118l1.287-3.966a1 1 0 00-.364-1.118L2.05 9.393c-.783-.57-.38-1.81.588-1.81h4.175a1 1 0 00.95-.69l1.286-3.966z" />
+                </svg>
+                <div
+                  className="absolute top-0 left-0 overflow-hidden text-yellow-400"
+                  style={{ width: `${fillPercent * 100}%` }}
+                >
+                  <svg
+                    className="w-5 h-5"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.966a1 1 0 00.95.69h4.175c.969 0 1.371 1.24.588 1.81l-3.38 2.455a1 1 0 00-.364 1.118l1.287 3.966c.3.921-.755 1.688-1.538 1.118l-3.38-2.455a1 1 0 00-1.176 0l-3.38 2.455c-.783.57-1.838-.197-1.538-1.118l1.287-3.966a1 1 0 00-.364-1.118L2.05 9.393c-.783-.57-.38-1.81.588-1.81h4.175a1 1 0 00.95-.69l1.286-3.966z" />
+                  </svg>
+                </div>
+              </div>
+            );
+          })}
+        </div>
         ) : (
           <p className="text-sm text-gray-500">Login to rate this book</p>
         )}

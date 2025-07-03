@@ -31,7 +31,8 @@ router.get('/:bookId', async (req, res) => {
         const validRatings = ratings.filter(r => typeof r.score === 'number');
         if (validRatings.length === 0) return res.json({ average: null });
         
-        const average = validRatings.reduce((acc, curr) => acc + curr.score, 0) / validRatings.length;
+        const rawAvg = validRatings.reduce((acc, curr) => acc + curr.score, 0) / validRatings.length;
+        const average = Math.round(rawAvg * 2) / 2; // round to nearest 0.5
         
         res.json({ average });
     } catch (err) {

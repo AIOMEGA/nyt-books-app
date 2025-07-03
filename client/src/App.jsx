@@ -1,44 +1,37 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import CategoryRow from './components/CategoryRow.jsx';
+import BookCard from './components/BookCard.jsx';
 import AuthForm from './components/AuthForm.jsx';
-import { motion } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 
-export default function App() {
+function App() {
+  const [query, setQuery] = useState('');
+  const [books, setBooks] = useState([]);
   const [auth, setAuth] = useState(() => {
     const token = localStorage.getItem('token');
     const userId = localStorage.getItem('userId');
     return token && userId ? { token, userId } : null;
   });
 
-  const [categories, setCategories] = useState([]);
-  const [books, setBooks] = useState({});
+  const MAX_RESULTS = 100;
+
+  const searchBooks = async () => {
+    try {
+      const res = await axios.get(`http://localhost:5000/api/books/search?q=${query}`);
+      const foundBooks = res.data.results || [];
+
+      setBooks(foundBooks.slice(0, MAX_RESULTS));
+    } catch (err) {
+      console.error('Error fetching books:', err);
+    }
+  };
 
   useEffect(() => {
-    async function fetchData() {
-      try {
-        const res = await axios.get('http://localhost:5000/api/books/list-names');
-        const cats = res.data.results.slice(0, 10);
-        setCategories(cats);
-        for (const c of cats) {
-          try {
-            const r = await axios.get(
-              `http://localhost:5000/api/books/current/${c.list_name_encoded}`
-            );
-            setBooks((prev) => ({
-              ...prev,
-              [c.list_name_encoded]: r.data.results.books || [],
-            }));
-          } catch (err) {
-            console.error('Failed fetching category', c.list_name_encoded, err);
-          }
-        }
-      } catch (err) {
-        console.error('Failed to fetch categories', err);
-      }
-    }
-    fetchData();
-  }, []);
+    const t = setTimeout(() => {
+      searchBooks();
+    }, 500);
+    return () => clearTimeout(t);
+  }, [query]);
 
   const handleAuth = ({ token, userId }) => {
     const data = { token, userId };
@@ -54,8 +47,8 @@ export default function App() {
   };
 
   return (
-    <motion.div className="p-6 space-y-8">
-      <h1 className="text-3xl font-bold text-center">NYT Best Sellers</h1>
+    <motion.div className="p-6 max-w-4xl mx-auto space-y-6">
+      <h1 className="text-3xl font-bold text-center">NYT Book Search</h1>
       <AuthForm onAuth={handleAuth} token={auth?.token} />
       {auth && (
         <button
@@ -65,17 +58,40 @@ export default function App() {
           Logout
         </button>
       )}
-      <div className="space-y-12">
-        {categories.map((cat) => (
-          <CategoryRow
-            key={cat.list_name_encoded}
-            title={cat.display_name}
-            books={books[cat.list_name_encoded] || []}
-            userId={auth?.userId}
-            token={auth?.token}
-          />
-        ))}
+      <div className="flex gap-2">
+        <input
+          className="flex-1 border p-2 rounded bg-gray-700 text-gray-100"
+          placeholder="Search for book name or author"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+        />
+        <button
+          onClick={searchBooks}
+          className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
+        >
+          Search
+        </button>
       </div>
+
+      {books.length === 0 ? (
+        <p className="text-gray-400 italic">No results found.</p>
+      ) : (
+        <AnimatePresence>
+          <div className="space-y-6">
+            {books.map((book) => (
+              <motion.div key={book.primary_isbn13} layout>
+                <BookCard
+                  book={book}
+                  userId={auth?.userId}
+                  token={auth?.token}
+                />
+              </motion.div>
+            ))}
+          </div>
+        </AnimatePresence>
+      )}
     </motion.div>
   );
 }
+
+export default App;

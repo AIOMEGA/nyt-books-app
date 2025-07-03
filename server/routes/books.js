@@ -6,10 +6,6 @@ const NYT_API_KEY = process.env.NYT_API_KEY;
 
 let cache = null;
 let cacheTimestamp = 0;
-let namesCache = null;
-let namesTimestamp = 0;
-const listCache = new Map();
-const TTL = 1000 * 60 * 5;
 
 router.get('/search', async (req, res) => {
   const now = Date.now();
@@ -57,45 +53,6 @@ function handleSearch(data, req, res) {
   
   res.json({ results });
 }
-
-router.get('/list-names', async (req, res) => {
-  const now = Date.now();
-  if (namesCache && now - namesTimestamp < TTL) {
-    return res.json({ results: namesCache });
-  }
-  try {
-    const response = await axios.get(
-      'https://api.nytimes.com/svc/books/v3/lists/names.json',
-      { params: { 'api-key': NYT_API_KEY } }
-    );
-    namesCache = response.data.results;
-    namesTimestamp = now;
-    res.json({ results: namesCache });
-  } catch (err) {
-    console.error(err.message);
-    res.status(500).json({ error: 'Failed to fetch list names' });
-  }
-});
-
-router.get('/current/:name', async (req, res) => {
-  const { name } = req.params;
-  const now = Date.now();
-  const cached = listCache.get(name);
-  if (cached && now - cached.timestamp < TTL) {
-    return res.json({ results: cached.data });
-  }
-  try {
-    const url = `https://api.nytimes.com/svc/books/v3/lists/current/${name}.json`;
-    const response = await axios.get(url, {
-      params: { 'api-key': NYT_API_KEY },
-    });
-    listCache.set(name, { data: response.data.results, timestamp: now });
-    res.json({ results: response.data.results });
-  } catch (err) {
-    console.error(err.message);
-    res.status(500).json({ error: 'Failed to fetch list' });
-  }
-});
 
 
 module.exports = router;

@@ -11,7 +11,7 @@ export default function RatingBreakdown({ ratings = [] }) {
 
   return (
     <div className="space-y-1 mt-1">
-      <p className="text-xs text-gray-600">
+      <p className="text-xs text-gray-300">
         {total} rating{total !== 1 ? 's' : ''}
       </p>
       {[5, 4, 3, 2, 1].map((star) => {

@@ -22,7 +22,7 @@ export default function CommentBox({ comments = [], onSubmit, onEdit, onDelete, 
   };
 
   return (
-    <div className="border p-3 bg-gray-50 rounded flex flex-col min-h-[185px]">
+    <div className="border p-3 bg-gray-600 rounded flex flex-col min-h-[185px]">
       <h3 className="font-semibold mb-1">Comments:</h3>
       <div className="flex-1 max-h-24 overflow-y-auto space-y-1 text-sm mb-2">
         {comments.map((c) => (
@@ -30,7 +30,7 @@ export default function CommentBox({ comments = [], onSubmit, onEdit, onDelete, 
             {editingId === c._id ? (
               <>
                 <input
-                  className="border p-1 flex-1 rounded text-sm"
+                  className="border p-1 flex-1 rounded text-sm bg-white text-gray-900"
                   value={editingText}
                   onChange={(e) => setEditingText(e.target.value)}
                 />
@@ -42,7 +42,7 @@ export default function CommentBox({ comments = [], onSubmit, onEdit, onDelete, 
                 </button>
                 <button
                   onClick={() => { setEditingId(null); setEditingText(''); }}
-                  className="text-xs bg-gray-300 px-1 rounded"
+                  className="text-xs bg-gray-300 px-1 rounded text-gray-600"
                 >
                   Cancel
                 </button>
@@ -56,7 +56,7 @@ export default function CommentBox({ comments = [], onSubmit, onEdit, onDelete, 
                   <div className="relative">
                     <button
                       onClick={() => setOpenMenuId(openMenuId === c._id ? null : c._id)}
-                      className="px-2 text-gray-500 hover:text-gray-700"
+                      className="px-2 text-black-500 hover:text-black-700"
                     >
                       &#8942;
                     </button>
@@ -68,7 +68,7 @@ export default function CommentBox({ comments = [], onSubmit, onEdit, onDelete, 
                             setEditingText(c.text);
                             setOpenMenuId(null);
                           }}
-                          className="text-xs px-2 py-1 rounded border hover:bg-gray-100 text-left"
+                          className="text-xs px-2 py-1 rounded border hover:bg-gray-100 text-left text-gray-800"
                         >
                           Edit
                         </button>
@@ -92,7 +92,7 @@ export default function CommentBox({ comments = [], onSubmit, onEdit, onDelete, 
       </div>
       <form onSubmit={handleSubmit} className="flex gap-2 pt-1 mt-auto">
         <input
-          className="border p-1 flex-1 rounded"
+          className="border p-1 flex-1 rounded text-gray-900"
           placeholder="Add a comment"
           value={text}
           onChange={(e) => setText(e.target.value)}

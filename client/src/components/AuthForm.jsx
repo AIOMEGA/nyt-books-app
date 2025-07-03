@@ -30,17 +30,17 @@ export default function AuthForm({ onAuth, token }) {
       onSubmit={handleSubmit}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="mb-6 p-4 bg-white shadow rounded flex flex-col sm:flex-row sm:items-end gap-2"
+      className="mb-6 p-4 bg-gray-800 shadow rounded flex flex-col sm:flex-row sm:items-end gap-2"
     >
       <input
-        className="border p-2 rounded flex-1"
+        className="border p-2 rounded flex-1 bg-gray-700 text-gray-100"
         placeholder="Username"
         value={username}
         onChange={(e) => setUsername(e.target.value)}
       />
       <input
         type="password"
-        className="border p-2 rounded flex-1"
+        className="border p-2 rounded flex-1 bg-gray-700 text-gray-100"
         placeholder="Password"
         value={password}
         onChange={(e) => setPassword(e.target.value)}

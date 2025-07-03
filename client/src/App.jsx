@@ -57,15 +57,15 @@ function App() {
       {auth && (
         <button
           onClick={handleLogout}
-          className="mb-4 self-start bg-gray-300 px-3 py-1 rounded"
+          className="mb-4 self-start bg-gray-700 text-white px-3 py-1 rounded"
         >
           Logout
         </button>
       )}
       <div className="flex gap-2">
         <input
-          className="flex-1 border p-2 rounded"
-          placeholder="Search by category name (e.g., 'fiction')"
+          className="flex-1 border p-2 rounded bg-gray-700 text-gray-100"
+          placeholder="Search for book name or author"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />
@@ -78,7 +78,7 @@ function App() {
       </div>
 
       {books.length === 0 ? (
-        <p className="text-gray-500 italic">No results found.</p>
+        <p className="text-gray-400 italic">No results found.</p>
       ) : (
         <AnimatePresence>
           <div className="space-y-6">

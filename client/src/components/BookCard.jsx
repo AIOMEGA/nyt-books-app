@@ -72,7 +72,7 @@ useEffect(() => {
   }, [bookId, token]);
 
   const handleEditComment = useCallback(async (id, text) => {
-    if (!editingCommentId) return;
+    if (!id || !text) return;
     try {
       await axios.put(
         `http://localhost:5000/api/comments/${id}`,
@@ -161,7 +161,7 @@ useEffect(() => {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       whileHover={{ scale: 1.02 }}
-      className="group p-4 border rounded shadow-sm bg-white flex flex-col sm:flex-row gap-4 transition"
+      className="group p-4 border rounded shadow-sm bg-gray-800 flex flex-col sm:flex-row gap-4 transition"
     >
       <img
         src={book.book_image}
@@ -170,9 +170,9 @@ useEffect(() => {
         className="w-32 h-auto rounded self-center sm:self-start shadow-md transition-transform group-hover:scale-105"
       />
       <div className="flex-1 space-y-2">
-        <h2 className="text-lg font-bold">{book.title}</h2>
-        <p className="text-sm text-gray-700 italic">by {book.author}</p>
-        <p className="text-gray-800">{book.description}</p>
+        <h2 className="text-lg font-bold text-gray-100">{book.title}</h2>
+        <p className="text-sm text-gray-400 italic">by {book.author}</p>
+        <p className="text-gray-200">{book.description}</p>
         <a
           href={book.amazon_product_url}
           target="_blank"
@@ -186,7 +186,7 @@ useEffect(() => {
       <div className="mt-4 space-y-2">
         <div className="flex items-center gap-1">
           {renderStars(ratings?.average || 0)}
-          <span className="ml-2 text-sm text-gray-700">
+          <span className="ml-2 text-sm text-gray-300">
             {ratings?.average?.toFixed(1) || 'N/A'}
           </span>
         </div>
@@ -243,7 +243,7 @@ useEffect(() => {
           })}
         </div>
         ) : (
-          <p className="text-sm text-gray-500">Login to rate this book</p>
+          <p className="text-sm text-gray-400">Login to rate this book</p>
         )}
         <RatingBreakdown ratings={ratings?.scores || []} />
       </div>
@@ -257,7 +257,7 @@ useEffect(() => {
           onDelete={(id) => token && handleDeleteComment(id)}
         />
         {!token && (
-          <p className="text-sm text-gray-500 mt-2">Login to add a comment</p>
+          <p className="text-sm text-gray-400 mt-2">Login to add a comment</p>
         )}
       </div>
       </motion.div>
